@@ -5,7 +5,7 @@ pipeline {
             steps {
                 dir('/home/ubuntu/workspace/ecs-project/src') {
                     sh 'docker build -t app-repo .'
-                    sh 'docker run -d -p 5000:5000 app-repo'
+                    sh 'docker run -d -p 5000:5000 app-repo --name app-repo'
                 }
             }
         }
@@ -14,6 +14,14 @@ pipeline {
                 dir('/home/ubuntu/workspace/ecs-project/src') {
                     sh 'python3 seleniumunit.py'
                 }
+            }
+        }
+        stage('Clean') {
+          steps {
+              dir('/home/ubuntu/workspace/ecs-project/src') {
+                  sh 'docker stop app-repo'
+                  sh 'docker rm app-repo'
+               }
             }
         }
         stage('Push') {
