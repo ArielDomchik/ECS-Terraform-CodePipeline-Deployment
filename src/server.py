@@ -28,7 +28,7 @@ city_search_count = Counter('city_search_count', 'Number of times a city has bee
 logging.info('Application Running!')
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
-#logging.basicConfig(filename="/logs/app.log") where the comments now?
+#logging.basicConfig(filename="/logs/app.log") where the comments now? -- stdout
 
 """
 def log_to_elasticsearch(record):
