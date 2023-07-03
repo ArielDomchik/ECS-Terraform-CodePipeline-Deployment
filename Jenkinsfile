@@ -4,7 +4,7 @@ pipeline {
         stage('Build') {
             steps {
                 dir('/home/ubuntu/workspace/ecs-project/src') {
-                    sh 'sudo apt-get install python3-pip'
+                    sh 'sudo apt-get install python3-pip -y'
                     sh 'pip install requirements.txt'
                     sh 'nohup python3 server.py'
                 }
