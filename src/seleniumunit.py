@@ -17,8 +17,10 @@ class TestSearch(unittest.TestCase):
         options.add_argument('--disable-dev-shm-usage')
         #s = Service('/home/ubuntu/chromedriver.exe')
         #self.driver = webdriver.Chrome(service=s, options=options)
-        driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
-        self.driver = driver
+        #driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+        driver_path = ChromeDriverManager().install()
+        #self.driver = driver
+        self.driver = webdriver.Chrome(executable_path=driver_path, options=options)  
 
 
 
