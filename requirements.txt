@@ -1,0 +1,12 @@
+flask
+gunicorn
+geopy
+countryinfo
+requests
+selenium
+webdriver-manager
+webdriver_manager
+boto3
+prometheus-flask-exporter
+prometheus_client
+elasticsearch

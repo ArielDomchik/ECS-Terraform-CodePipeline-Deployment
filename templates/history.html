@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather App - History</title>
+</head>
+<body>
+    <h1>Weather App - History</h1>
+    {% if links %}
+        <ul>
+        {% for name in links %}
+            <li><a href="{{ url_for('download_data', filename=name) }}" download>{{ name }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No history found.</p>
+    {% endif %}
+</body>
+</html>
