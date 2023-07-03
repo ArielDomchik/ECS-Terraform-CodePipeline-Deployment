@@ -15,12 +15,8 @@ class TestSearch(unittest.TestCase):
         options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
-        #s = Service('/home/ubuntu/chromedriver.exe')
-        #self.driver = webdriver.Chrome(service=s, options=options)
-        driver_path = ChromeDriverManager().install()
-        driver = webdriver.Chrome(executable_path=driver_path)
-        driver.options = options
-        self.driver = driver
+        s = Service('/home/ubuntu/tools/chromedriver/chromedriver')
+        self.driver = webdriver.Chrome(service=s, options=options)
 
 
 
