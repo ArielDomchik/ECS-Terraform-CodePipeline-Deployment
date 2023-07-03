@@ -5,10 +5,13 @@ FROM python:alpine
 #ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 
-#WORKDIR usr/src/flask_app
+WORKDIR /app
+RUN addgroup -S myuser && adduser -S myuser -G myuser
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 COPY . .
+RUN chown -R myuser:myuser /app
+USER myuser
 EXPOSE 5000
 
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "wsgi:app"]
