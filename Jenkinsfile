@@ -5,7 +5,7 @@ pipeline {
             steps {
                 dir('/home/ubuntu/workspace/ecs-project/src') {
                     sh 'docker build -t app-repo .'
-                    sh 'docker run -d -p 5000:5000 app-repo --name app-repo'
+                    sh 'docker run -d -p 5000:5000 app-repo -t app-repo'
                 }
             }
         }
