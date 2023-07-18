@@ -1,31 +1,10 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-
-    <title>Weather Forecast - This is a new version</title>
+    <meta charset="UTF-8">
+    <title>Index page</title>
 </head>
-<body style="background-color: {{bg_color}};">
-    <div style="text-align: center;">
-        <h1>Weather Forecast - This is a new version</h1>
-    </div>
-    <div class="check">
-    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}"/>
-    <form method="POST" action="/weather">
-        <h2 class="dynamic-message" style="text-align: center">{{msg}}</h2>
-        <input type="text" name="city" placeholder="Enter the city name">
-        <button type="submit">Submit</button>
-    </form>
-</div>
-<a href="https://d2nxm4gvqdqyj1.cloudfront.net/background.jpeg" download>
-<button type="button">Download from CDN</button>
-</a>
-<a href="/static/SL_042221_42420_05.jpg" download>
-<button type="button">Download from web app</button>
-</a>
-<form action="https://s3.amazonaws.com/arieldomchik/background.jpeg" method="get">
-    <input type="hidden" name="command" value="aws s3api get-object --bucket arieldomchik --key background.jpeg background.jpeg" />
-    <input type="submit" value="Download using API" />
-</form>
+<body>
+The hostname of the container is <b>{{ hostname }}</b> and its IP is <b>{{ ip }} Version 3 is out.</b>.
 </body>
 </html>
