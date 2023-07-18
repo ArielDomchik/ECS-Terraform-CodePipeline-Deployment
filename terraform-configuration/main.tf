@@ -1,158 +1,159 @@
+#Task 1
 provider "aws" {
   region = var.region
 }
 
+data "aws_availability_zones" "available" {}
 
-resource "aws_ecr_repository" "app_ecr_repo" {
-  name = "app-repo"
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "3.19.0"
+
+  name = "cloudride-vpc"
+
+  cidr = "10.0.0.0/16"
+  azs  = slice(data.aws_availability_zones.available.names, 0, 3)
+
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+  public_subnets  = ["10.0.3.0/24", "10.0.4.0/24"]
+
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+  enable_dns_hostnames = true
 }
 
+#Task 2
 resource "aws_ecs_cluster" "my_cluster" {
-  name = "app-cluster" # Name your cluster here
+  name = "CloudRide" # Name your ECS cluster here
 }
 
 resource "aws_iam_role" "ecsTaskExecutionRole" {
-  name               = "ecsTaskExecutionRole"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
-}
+  name = "ecsTaskExecutionRole"
 
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
-  role       = "${aws_iam_role.ecsTaskExecutionRole.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  role       = aws_iam_role.ecsTaskExecutionRole.name
 }
 
 resource "aws_ecs_task_definition" "app_task" {
-  family                   = "app-first-task" # Name your task
-  container_definitions    = <<DEFINITION
-  [
+  family                   = "app-first-task" # Name your task definition
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
+
+  execution_role_arn = aws_iam_role.ecsTaskExecutionRole.arn
+
+  container_definitions = jsonencode([
     {
-      "name": "app-first-task",
-      "image": "${aws_ecr_repository.app_ecr_repo.repository_url}:latest",
-      "essential": true,
-      "portMappings": [
+      name      = "app-first-container" # Name your container
+      image     = "646360616404.dkr.ecr.us-east-1.amazonaws.com/app-repo:latest" # Replace with your container image URL
+      essential = true
+      portMappings = [
         {
-          "containerPort": 5000,
-          "hostPort": 5000
+          containerPort = 5000
+          hostPort      = 5000
         }
-      ],
-      "memory": 512,
-      "cpu": 256,
-      "environment": ${jsonencode(var.BG_COLOR)}
+      ]
     }
-  ]
-  DEFINITION
-  requires_compatibilities = ["FARGATE"] # use Fargate as the launch type
-  network_mode             = "awsvpc"    # add the AWS VPN network mode as this is required for Fargate
-  memory                   = 512         # Specify the memory the container requires
-  cpu                      = 256         # Specify the CPU the container requires
-  execution_role_arn       = "${aws_iam_role.ecsTaskExecutionRole.arn}"
+  ])
 }
 
-# Provide a reference to your default VPC
-resource "aws_default_vpc" "default_vpc" {
-}
+resource "aws_security_group" "lb" {
+  name        = "example-alb-security-group"
+  vpc_id      = module.vpc.vpc_id
 
-# Provide references to your default subnets
-resource "aws_default_subnet" "default_subnet_a" {
-  # Use your own region here but reference to subnet 1a
-  availability_zone = "us-east-1a"
-}
-
-resource "aws_default_subnet" "default_subnet_b" {
-  # Use your own region here but reference to subnet 1b
-  availability_zone = "us-east-1b"
-}
-
-resource "aws_alb" "application_load_balancer" {
-  name               = "load-balancer-dev" #load balancer name
-  load_balancer_type = "application"
-  subnets = [ # Referencing the default subnets
-    "${aws_default_subnet.default_subnet_a.id}",
-    "${aws_default_subnet.default_subnet_b.id}"
-  ]
-  # security group
-  security_groups = ["${aws_security_group.load_balancer_security_group.id}"]
-}
-
-# Create a security group for the load balancer:
-resource "aws_security_group" "load_balancer_security_group" {
   ingress {
+    protocol    = "tcp"
     from_port   = 80
     to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Allow traffic in from all sources
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_lb_target_group" "target_group" {
-  name        = "target-group"
-  port        = 80
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = "${aws_default_vpc.default_vpc.id}" # default VPC
-}
-
-resource "aws_lb_listener" "listener" {
-  load_balancer_arn = "${aws_alb.application_load_balancer.arn}" #  load balancer
-  port              = "80"
-  protocol          = "HTTP"
-  default_action {
-    type             = "forward"
-    target_group_arn = "${aws_lb_target_group.target_group.arn}" # target group
-  }
-}
-
-resource "aws_ecs_service" "app_service" {
-  name            = "app-first-service"     # Name the service
-  cluster         = "${aws_ecs_cluster.my_cluster.id}"   # Reference the created Cluster
-  task_definition = "${aws_ecs_task_definition.app_task.arn}" # Reference the task that the service will spin up
-  launch_type     = "FARGATE"
-  desired_count   = 3 # Set up the number of containers to 3
-
-  load_balancer {
-    target_group_arn = "${aws_lb_target_group.target_group.arn}" # Reference the target group
-    container_name   = "${aws_ecs_task_definition.app_task.family}"
-    container_port   = 5000 # Specify the container port
-  }
-
-  network_configuration {
-    subnets          = ["${aws_default_subnet.default_subnet_a.id}", "${aws_default_subnet.default_subnet_b.id}"]
-    assign_public_ip = true     # Provide the containers with public IPs
-    security_groups  = ["${aws_security_group.service_security_group.id}"] # Set up the security group
-  }
-}
-
-resource "aws_security_group" "service_security_group" {
-  ingress {
     from_port = 0
     to_port   = 0
     protocol  = "-1"
-    # Only allowing traffic in from the load balancer security group
-    security_groups = ["${aws_security_group.load_balancer_security_group.id}"]
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_lb" "default" {
+  name            = "example-lb"
+  subnets         = module.vpc.public_subnets
+  security_groups = [aws_security_group.lb.id]
+}
+
+resource "aws_lb_target_group" "hello_world" {
+  name        = "example-target-group"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = module.vpc.vpc_id
+  target_type = "ip"
+}
+
+resource "aws_lb_listener" "hello_world" {
+  load_balancer_arn = aws_lb.default.id
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.hello_world.id
+    type             = "forward"
+  }
+}
+
+resource "aws_security_group" "hello_world_task" {
+  name        = "example-task-security-group"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    protocol        = "tcp"
+    from_port       = 5000
+    to_port         = 5000
+    security_groups = [aws_security_group.lb.id]
   }
 
   egress {
+    protocol    = "-1"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_ecs_service" "hello_world_task" {
+  name            = "app-first-service" # Name your ECS service
+  cluster         = aws_ecs_cluster.my_cluster.id
+  task_definition = aws_ecs_task_definition.app_task.arn
+  launch_type     = "FARGATE"
+  desired_count   = 2 # Number of containers to run
+
+  # Attach the security group to the service tasks
+  network_configuration {
+    subnets          = module.vpc.private_subnets
+    assign_public_ip = false
+    security_groups  = [aws_security_group.hello_world_task.id]
+  }
+
+  # Configure the service to use the ALB
+  load_balancer {
+    target_group_arn = aws_lb_target_group.hello_world.id
+    container_name   = "app-first-container"
+    container_port   = 5000
   }
 }
