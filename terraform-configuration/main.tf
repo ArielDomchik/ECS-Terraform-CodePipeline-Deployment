@@ -65,8 +65,8 @@ resource "aws_ecs_task_definition" "app_task" {
       essential = true
       portMappings = [
         {
-          containerPort = 5000
-          hostPort      = 5000
+          containerPort = 8080
+          hostPort      = 8080
         }
       ]
     }
@@ -123,8 +123,8 @@ resource "aws_security_group" "hello_world_task" {
 
   ingress {
     protocol        = "tcp"
-    from_port       = 5000
-    to_port         = 5000
+    from_port       = 8080
+    to_port         = 8080
     security_groups = [aws_security_group.lb.id]
   }
 
@@ -154,6 +154,6 @@ resource "aws_ecs_service" "hello_world_task" {
   load_balancer {
     target_group_arn = aws_lb_target_group.hello_world.id
     container_name   = "app-first-container"
-    container_port   = 5000
+    container_port   = 8080
   }
 }
