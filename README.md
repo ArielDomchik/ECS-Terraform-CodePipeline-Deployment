@@ -1,3 +1,4 @@
+
 # ECS-Terraform-Codepipeline-Deployment
 
 This repository contains the Terraform configuration to deploy a Flask application on Amazon ECS using AWS resources. The application displays the hostname and IP address of the running container.
@@ -37,9 +38,8 @@ This Terraform configuration utilizes Terraform Cloud workspaces for isolation a
     }
   }
 }
+```
 
-
-   
 ## Application Details
 
 The application consists of the following files:
@@ -88,7 +88,7 @@ To deploy the application, follow these steps:
 
 To clean up and destroy the resources created by Terraform, run:
 
-`terraform destroy` 
+`terraform destroy --auto-approve` 
 
 Type "yes" when prompted to confirm the destruction of resources.
 
