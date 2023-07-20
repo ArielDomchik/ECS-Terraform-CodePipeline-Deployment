@@ -10,7 +10,7 @@ module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "3.19.0"
 
-  name = "cloudride-vpc"
+  name = var.vpc_name
 
   cidr = "10.0.0.0/16"
   azs  = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -51,7 +51,7 @@ resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
 }
 
 resource "aws_ecs_task_definition" "app_task" {
-  family                   = "app-first-task" # Name your task definition
+  family                   = var.ecs_task_family
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 256
@@ -61,7 +61,7 @@ resource "aws_ecs_task_definition" "app_task" {
 
   container_definitions = jsonencode([
     {
-      name      = "app-first-container" # Name your container
+      name      = "app-first-container"                                                 # Name your container
       image     = "753392824297.dkr.ecr.eu-central-1.amazonaws.com/arieldomchik:latest" # Replace with your container image URL
       essential = true
       portMappings = [
@@ -75,8 +75,8 @@ resource "aws_ecs_task_definition" "app_task" {
 }
 
 resource "aws_security_group" "lb" {
-  name        = "example-alb-security-group"
-  vpc_id      = module.vpc.vpc_id
+  name   = var.security_group_name_lb
+  vpc_id = module.vpc.vpc_id
 
   ingress {
     protocol    = "tcp"
@@ -86,21 +86,21 @@ resource "aws_security_group" "lb" {
   }
 
   egress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_lb" "default" {
-  name            = "example-lb"
+  name            = var.lb_name
   subnets         = module.vpc.public_subnets
   security_groups = [aws_security_group.lb.id]
 }
 
 resource "aws_lb_target_group" "hello_world" {
-  name        = "example-target-group"
+  name        = var.target_group_name
   port        = 80
   protocol    = "HTTP"
   vpc_id      = module.vpc.vpc_id
@@ -119,8 +119,8 @@ resource "aws_lb_listener" "hello_world" {
 }
 
 resource "aws_security_group" "hello_world_task" {
-  name        = "example-task-security-group"
-  vpc_id      = module.vpc.vpc_id
+  name   = var.security_group_name_task
+  vpc_id = module.vpc.vpc_id
 
   ingress {
     protocol        = "tcp"
@@ -138,7 +138,7 @@ resource "aws_security_group" "hello_world_task" {
 }
 
 resource "aws_ecs_service" "hello_world_task" {
-  name            = "app-first-service" # Name your ECS service
+  name            = var.ecs_service_name
   cluster         = aws_ecs_cluster.my_cluster.id
   task_definition = aws_ecs_task_definition.app_task.arn
   launch_type     = "FARGATE"
@@ -158,7 +158,7 @@ resource "aws_ecs_service" "hello_world_task" {
     container_port   = 8080
   }
 
-  deployment_maximum_percent = 200
+  deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 50
 }
 
@@ -174,7 +174,7 @@ resource "aws_appautoscaling_target" "ecs_service" {
 }
 
 resource "aws_appautoscaling_policy" "ecs_service_scaling" {
-  name               = "ecs-service-scaling"
+  name               = var.autoscaler_name
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs_service.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_service.scalable_dimension

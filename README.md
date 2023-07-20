@@ -6,7 +6,7 @@ This repository contains the Terraform configuration to deploy a Flask applicati
 
 Before you begin, make sure you have the following:
 
-1.  [Terraform](https://www.terraform.io/) installed on your local machine. We recommend using the latest stable version.
+1.  [Terraform](https://www.terraform.io/) installed on your local machine. I recommend using the latest stable version.
     
 2.  AWS CLI installed and configured with the necessary credentials and profiles.
     
@@ -20,6 +20,23 @@ Before you begin, make sure you have the following:
 ## Terraform Cloud Workspace
 
 This Terraform configuration utilizes Terraform Cloud workspaces for isolation and easier management. The workspace name is set to `"<your-backend-here>"` at `terraform.tf`. If you are running this configuration in Terraform Cloud, ensure you have created the workspace with the correct name.
+Also validate that env variable `TF_CLOUD_ORGANIZATION` is set correctly.
+
+`terraform {
+  cloud {
+    workspaces {
+      name = "<your-backend-here>"
+    }
+  }
+
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = "4.45.0"
+    }
+  }
+}
+`
 
    
 ## Application Details
@@ -56,11 +73,11 @@ To deploy the application, follow these steps:
 -   Apply the changes to create the resources:
     
 
-1.  `terraform apply` 
+3.  `terraform apply` 
     
     Type "yes" when prompted to confirm the changes.
     
-2.  Once the deployment is complete, Terraform will output the public IP address of the deployed application.
+4.  Once the deployment is complete, Terraform will output the public IP address of the deployed application.
     
 
 ## Cleaning Up
