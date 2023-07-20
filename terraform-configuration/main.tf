@@ -3,6 +3,7 @@ provider "aws" {
   region = var.region
 }
 
+
 data "aws_availability_zones" "available" {}
 
 module "vpc" {
@@ -28,7 +29,7 @@ resource "aws_ecs_cluster" "my_cluster" {
 }
 
 resource "aws_iam_role" "ecsTaskExecutionRole" {
-  name = "ecsTaskExecutionRole"
+  name = "ecsTaskExecutionRoleAriel"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -61,7 +62,7 @@ resource "aws_ecs_task_definition" "app_task" {
   container_definitions = jsonencode([
     {
       name      = "app-first-container" # Name your container
-      image     = "646360616404.dkr.ecr.us-east-1.amazonaws.com/app-repo:latest" # Replace with your container image URL
+      image     = "753392824297.dkr.ecr.eu-central-1.amazonaws.com/arieldomchik:latest" # Replace with your container image URL
       essential = true
       portMappings = [
         {
@@ -155,5 +156,34 @@ resource "aws_ecs_service" "hello_world_task" {
     target_group_arn = aws_lb_target_group.hello_world.id
     container_name   = "app-first-container"
     container_port   = 8080
+  }
+
+  deployment_maximum_percent = 200
+  deployment_minimum_healthy_percent = 50
+}
+
+
+#Auto Scaling
+
+resource "aws_appautoscaling_target" "ecs_service" {
+  max_capacity       = 4
+  min_capacity       = 2
+  resource_id        = "service/${aws_ecs_cluster.my_cluster.name}/${aws_ecs_service.hello_world_task.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "ecs_service_scaling" {
+  name               = "ecs-service-scaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_service.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_service.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_service.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value = 75.0 # Adjust this value based on your desired CPU utilization percentage
   }
 }

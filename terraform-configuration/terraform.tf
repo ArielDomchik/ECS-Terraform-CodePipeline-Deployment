@@ -1,7 +1,7 @@
 terraform {
   cloud {
     workspaces {
-      name = "ecs-project"
+      name = "<your-backend-here>"
     }
   }
 
