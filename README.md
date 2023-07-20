@@ -20,9 +20,10 @@ Before you begin, make sure you have the following:
 ## Terraform Cloud Workspace
 
 This Terraform configuration utilizes Terraform Cloud workspaces for isolation and easier management. The workspace name is set to `"<your-backend-here>"` at `terraform.tf`. If you are running this configuration in Terraform Cloud, ensure you have created the workspace with the correct name.
-Also validate that env variable `TF_CLOUD_ORGANIZATION` is set correctly.
 
-`terraform {
+* Also validate that env variable `TF_CLOUD_ORGANIZATION` is set correctly to your terraform cloud organization name with export `TF_CLOUD_ORGANIZATION=<your-cloud-name>`.
+
+```terraform {
   cloud {
     workspaces {
       name = "<your-backend-here>"
@@ -36,7 +37,7 @@ Also validate that env variable `TF_CLOUD_ORGANIZATION` is set correctly.
     }
   }
 }
-`
+
 
    
 ## Application Details
@@ -78,6 +79,9 @@ To deploy the application, follow these steps:
     Type "yes" when prompted to confirm the changes.
     
 4.  Once the deployment is complete, Terraform will output the public IP address of the deployed application.
+
+
+5. For the pipeline impelmentation, use this guide [Official AWS Guide for ECS Deployment with CodePipeline](https://docs.aws.amazon.com/codepipeline/latest/userguide/ecs-cd-pipeline.html)
     
 
 ## Cleaning Up
