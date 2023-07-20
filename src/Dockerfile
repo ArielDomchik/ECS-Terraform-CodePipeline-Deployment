@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/python:3.12.0b4-alpine
+FROM python:3.10.0-alpine
 COPY . .
 RUN adduser -D myuser && chown -R myuser /templates/index.html /templates/error.html app.py /templates
 USER myuser
