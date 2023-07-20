@@ -3,8 +3,8 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 753392824297.dkr.ecr.eu-central-1.amazonaws.com/arieldomchik:latest
-      - REPOSITORY_URI=753392824297.dkr.ecr.eu-central-1.amazonaws.com/arieldomchik
+      - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI
+      - REPOSITORY_URI=$ECR_REPOSITORY_URI
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
