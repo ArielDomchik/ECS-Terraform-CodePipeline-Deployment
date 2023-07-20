@@ -3,15 +3,15 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 646360616404.dkr.ecr.us-east-1.amazonaws.com/app-repo
-      - REPOSITORY_URI=646360616404.dkr.ecr.us-east-1.amazonaws.com/app-repo
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 753392824297.dkr.ecr.eu-central-1.amazonaws.com/arieldomchik:latest
+      - REPOSITORY_URI=753392824297.dkr.ecr.eu-central-1.amazonaws.com/arieldomchik
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - cd src/ && docker build -t $REPOSITORY_URI:latest .
+      - cd src/ && docker build -t $REPOSITORY_URI:$IMAGE_TAG .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
