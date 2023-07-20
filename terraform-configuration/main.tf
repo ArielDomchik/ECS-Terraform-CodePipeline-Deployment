@@ -25,7 +25,7 @@ module "vpc" {
 
 #Task 2
 resource "aws_ecs_cluster" "my_cluster" {
-  name = "CloudRide" # Name your ECS cluster here
+  name = var.ecs_cluster_name # Name your ECS cluster here
 }
 
 resource "aws_iam_role" "ecsTaskExecutionRole" {
