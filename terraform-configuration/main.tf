@@ -61,8 +61,8 @@ resource "aws_ecs_task_definition" "app_task" {
 
   container_definitions = jsonencode([
     {
-      name      = "app-first-container"                                                 # Name your container
-      image     = "753392824297.dkr.ecr.eu-central-1.amazonaws.com/arieldomchik:latest" # Replace with your container image URL
+      name      = var.task_container_name                                               # Name your container
+      image     = var.container_image_url
       essential = true
       portMappings = [
         {
